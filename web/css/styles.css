@@ -1,0 +1,194 @@
+/* MSK Load Simulation Tool — Styles */
+
+:root {
+    --msk-primary: #232f3e;
+    --msk-accent: #ff9900;
+    --msk-dark: #1a1a2e;
+    --msk-card-dark: #16213e;
+    --msk-text-muted: #8892a4;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Login Screen */
+#login-screen {
+    background: linear-gradient(135deg, var(--msk-primary) 0%, #0f3057 100%);
+}
+
+#login-screen .card {
+    border: none;
+    border-radius: 12px;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--msk-primary) !important;
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+/* Tabs */
+.nav-tabs .nav-link {
+    color: #495057;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    border-bottom: 2px solid #0d6efd;
+}
+
+.nav-tabs .nav-link i {
+    margin-right: 4px;
+}
+
+/* Cards */
+.card {
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark Metrics Panel */
+.card.bg-dark {
+    background-color: var(--msk-card-dark) !important;
+    border: 1px solid #2a3a5e;
+}
+
+.card.bg-dark .card-header {
+    background-color: var(--msk-dark);
+    border-bottom: 1px solid #2a3a5e;
+    font-weight: 500;
+}
+
+/* Metric Display */
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: var(--msk-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Consumer Stream */
+.consumer-stream {
+    height: 300px;
+    overflow-y: auto;
+    padding: 12px;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    background-color: #0d1117;
+    border-radius: 0 0 8px 8px;
+}
+
+.consumer-stream .stream-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid #21262d;
+}
+
+.consumer-stream .stream-timestamp {
+    color: #7ee787;
+}
+
+.consumer-stream .stream-partition {
+    color: #79c0ff;
+}
+
+.consumer-stream .stream-offset {
+    color: #d2a8ff;
+}
+
+.consumer-stream .stream-value {
+    color: #e6edf3;
+}
+
+/* Template Editor */
+#message-template {
+    font-size: 0.85rem;
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+#message-template:focus {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+/* Broker Input */
+.broker-input {
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+/* Connection Status */
+#connection-status .badge {
+    font-size: 0.85rem;
+}
+
+/* Charts */
+canvas {
+    max-height: 200px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .metric-value {
+        font-size: 1.1rem;
+    }
+
+    .consumer-stream {
+        height: 200px;
+    }
+
+    #message-template {
+        rows: 6;
+    }
+}
+
+/* Scrollbar styling for dark panels */
+.consumer-stream::-webkit-scrollbar {
+    width: 8px;
+}
+
+.consumer-stream::-webkit-scrollbar-track {
+    background: #0d1117;
+}
+
+.consumer-stream::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 4px;
+}
+
+.consumer-stream::-webkit-scrollbar-thumb:hover {
+    background: #484f58;
+}
+
+/* Loading states */
+.btn .spinner-border {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15rem;
+}
+
+/* Badge pulse animation */
+.badge.bg-success {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}

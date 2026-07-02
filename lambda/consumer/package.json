@@ -1,0 +1,16 @@
+{
+  "name": "msk-load-sim-consumer",
+  "version": "1.0.0",
+  "description": "MSK Load Simulator — Consumer Lambda",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests configured\" && exit 0"
+  },
+  "dependencies": {
+    "kafkajs": "2.2.4",
+    "@aws-sdk/client-dynamodb": "3.490.0",
+    "@aws-sdk/client-secrets-manager": "3.490.0",
+    "aws-msk-iam-sasl-signer-js": "1.0.0",
+    "uuid": "9.0.0"
+  }
+}

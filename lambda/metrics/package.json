@@ -1,0 +1,13 @@
+{
+  "name": "msk-load-sim-metrics",
+  "version": "1.0.0",
+  "description": "MSK Load Simulator — Metrics Lambda (CloudWatch)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests configured\" && exit 0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch": "3.490.0",
+    "@aws-sdk/client-kafka": "3.490.0"
+  }
+}

@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-cloudformation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Validate Cognito Setup Template
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://deploy/msk-load-sim-cognito-setup.yaml
+
+      - name: Validate Full Stack Template
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://deploy/msk-load-sim-full-stack.yaml
+
+  lint-lambda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies (control)
+        run: cd lambda/control && npm ci --ignore-scripts
+
+      - name: Install dependencies (producer)
+        run: cd lambda/producer && npm ci --ignore-scripts
+
+      - name: Install dependencies (consumer)
+        run: cd lambda/consumer && npm ci --ignore-scripts
+
+      - name: Install dependencies (metrics)
+        run: cd lambda/metrics && npm ci --ignore-scripts
+
+  lint-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: HTML Validation
+        uses: Cyb3r-Jak3/html5validator-action@v7.2.0
+        with:
+          root: web/
+          css: true
+
+      - name: Check for console.log statements
+        run: |
+          if grep -r "console.log" web/js/ --include="*.js" | grep -v "// debug"; then
+            echo "Warning: Found console.log statements in production code"
+          fi

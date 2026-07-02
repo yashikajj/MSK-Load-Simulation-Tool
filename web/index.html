@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon MSK Load Simulation Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="container-fluid vh-100 d-flex align-items-center justify-content-center">
+        <div class="card shadow-lg" style="max-width: 420px; width: 100%;">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="bi bi-broadcast-pin fs-1 text-primary"></i>
+                    <h3 class="mt-2">MSK Load Simulator</h3>
+                    <p class="text-muted">Sign in to start load testing</p>
+                </div>
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" required autocomplete="username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required autocomplete="current-password">
+                    </div>
+                    <div id="login-error" class="alert alert-danger d-none" role="alert"></div>
+                    <button type="submit" class="btn btn-primary w-100" id="login-btn">
+                        <span class="spinner-border spinner-border-sm d-none" id="login-spinner"></span>
+                        Sign In
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (hidden until login) -->
+    <div id="dashboard" class="d-none">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <i class="bi bi-broadcast-pin"></i> MSK Load Simulator
+                </a>
+                <div class="d-flex align-items-center">
+                    <span class="text-light me-3" id="user-display"></span>
+                    <button class="btn btn-outline-light btn-sm" id="logout-btn">
+                        <i class="bi bi-box-arrow-right"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Tab Navigation -->
+        <div class="container-fluid mt-3">
+            <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="cluster-tab" data-bs-toggle="tab" data-bs-target="#cluster-panel" type="button" role="tab">
+                        <i class="bi bi-hdd-network"></i> Cluster Setup
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="producer-tab" data-bs-toggle="tab" data-bs-target="#producer-panel" type="button" role="tab">
+                        <i class="bi bi-send"></i> Producer
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="consumer-tab" data-bs-toggle="tab" data-bs-target="#consumer-panel" type="button" role="tab">
+                        <i class="bi bi-inbox"></i> Consumer
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#metrics-panel" type="button" role="tab">
+                        <i class="bi bi-graph-up"></i> Metrics
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content mt-3" id="mainTabContent">
+                <!-- Cluster Setup Tab -->
+                <div class="tab-pane fade show active" id="cluster-panel" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0">Cluster Connection</h5></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Bootstrap Server(s)</label>
+                                <div id="broker-list">
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control broker-input" placeholder="b-1.cluster.kafka.us-east-1.amazonaws.com:9098">
+                                        <button class="btn btn-outline-secondary remove-broker d-none" type="button"><i class="bi bi-x-lg"></i></button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary" id="add-broker-btn">
+                                    <i class="bi bi-plus-lg"></i> Add Broker
+                                </button>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Authentication Method</label>
+                                <div class="row">
+                                    <div class="col-auto">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="authMethod" id="auth-iam" value="iam" checked>
+                                            <label class="form-check-label" for="auth-iam">IAM</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="authMethod" id="auth-scram" value="scram">
+                                            <label class="form-check-label" for="auth-scram">SASL/SCRAM</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="authMethod" id="auth-mtls" value="mtls">
+                                            <label class="form-check-label" for="auth-mtls">mTLS</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="authMethod" id="auth-plain" value="plaintext">
+                                            <label class="form-check-label" for="auth-plain">Plaintext</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- SCRAM credentials (hidden by default) -->
+                            <div class="mb-3 d-none" id="scram-config">
+                                <label class="form-label">Secrets Manager Secret ARN</label>
+                                <input type="text" class="form-control" id="scram-secret-arn" placeholder="arn:aws:secretsmanager:us-east-1:123456789012:secret:AmazonMSK_...">
+                            </div>
+                            <!-- mTLS config (hidden by default) -->
+                            <div class="mb-3 d-none" id="mtls-config">
+                                <label class="form-label">Client Certificate ARN (ACM Private CA)</label>
+                                <input type="text" class="form-control" id="mtls-cert-arn" placeholder="arn:aws:acm:us-east-1:123456789012:certificate/...">
+                            </div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <button class="btn btn-outline-primary" id="test-connection-btn">
+                                    <i class="bi bi-plug"></i> Test Connection
+                                </button>
+                                <button class="btn btn-success" id="save-cluster-btn">
+                                    <i class="bi bi-check-lg"></i> Save &amp; Continue
+                                </button>
+                                <span id="connection-status" class="ms-3"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Producer Tab -->
+                <div class="tab-pane fade" id="producer-panel" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0">Message Producer</h5></div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Topic</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="producer-topic">
+                                            <option value="" disabled selected>Select topic...</option>
+                                        </select>
+                                        <button class="btn btn-outline-secondary" id="refresh-topics-btn" title="Refresh topics">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 d-flex align-items-end">
+                                    <button class="btn btn-outline-primary btn-sm" id="create-topic-btn">
+                                        <i class="bi bi-plus-lg"></i> Create New Topic
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Message Template</label>
+                                <div class="d-flex gap-2 mb-2">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-clipboard"></i> Load Template
+                                        </button>
+                                        <ul class="dropdown-menu" id="template-dropdown">
+                                            <li><a class="dropdown-item" href="#" data-template="ecommerce">E-Commerce Order</a></li>
+                                            <li><a class="dropdown-item" href="#" data-template="iot">IoT Sensor</a></li>
+                                            <li><a class="dropdown-item" href="#" data-template="financial">Financial Transaction</a></li>
+                                            <li><a class="dropdown-item" href="#" data-template="clickstream">Clickstream</a></li>
+                                            <li><a class="dropdown-item" href="#" data-template="log">Log Entry</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="#" data-template="custom">Custom (blank)</a></li>
+                                        </ul>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-success" id="save-template-btn">
+                                        <i class="bi bi-save"></i> Save Template
+                                    </button>
+                                </div>
+                                <textarea class="form-control font-monospace" id="message-template" rows="10" placeholder='{"orderId": "{{random.uuid}}", "amount": {{random.number(1,1000)}}}'></textarea>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Records/sec</label>
+                                    <input type="number" class="form-control" id="records-per-sec" value="100" min="1" max="10000">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Batch Size</label>
+                                    <input type="number" class="form-control" id="batch-size" value="16" min="1" max="500">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Duration (seconds)</label>
+                                    <input type="number" class="form-control" id="duration" value="60" min="1" max="3600">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Compression</label>
+                                    <select class="form-select" id="compression">
+                                        <option value="none">None</option>
+                                        <option value="gzip">GZIP</option>
+                                        <option value="snappy">Snappy</option>
+                                        <option value="lz4">LZ4</option>
+                                        <option value="zstd">ZSTD</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 mb-3">
+                                <button class="btn btn-success" id="start-producer-btn">
+                                    <i class="bi bi-play-fill"></i> Start Producing
+                                </button>
+                                <button class="btn btn-danger d-none" id="stop-producer-btn">
+                                    <i class="bi bi-stop-fill"></i> Stop
+                                </button>
+                            </div>
+
+                            <!-- Live Metrics Panel -->
+                            <div class="card bg-dark text-light" id="producer-metrics">
+                                <div class="card-header">
+                                    <i class="bi bi-activity"></i> Live Metrics
+                                    <span class="badge bg-success ms-2 d-none" id="producer-active-badge">ACTIVE</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-2">
+                                            <div class="metric-value" id="metric-sent">0</div>
+                                            <div class="metric-label">Sent</div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="metric-value text-danger" id="metric-errors">0</div>
+                                            <div class="metric-label">Errors</div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="metric-value text-info" id="metric-rate">0</div>
+                                            <div class="metric-label">msg/s</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="metric-value" id="metric-bytes">0 B</div>
+                                            <div class="metric-label">Bytes Sent</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="metric-value text-warning" id="metric-latency">0ms (p99: 0ms)</div>
+                                            <div class="metric-label">Latency</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consumer Tab -->
+                <div class="tab-pane fade" id="consumer-panel" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0">Message Consumer</h5></div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Topic</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="consumer-topic">
+                                            <option value="" disabled selected>Select topic...</option>
+                                        </select>
+                                        <button class="btn btn-outline-secondary" id="refresh-consumer-topics-btn" title="Refresh">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Consumer Group</label>
+                                    <input type="text" class="form-control" id="consumer-group" value="msk-sim-cg-001">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Start From</label>
+                                    <div class="d-flex gap-3 mt-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="startFrom" id="start-latest" value="latest" checked>
+                                            <label class="form-check-label" for="start-latest">Latest</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="startFrom" id="start-earliest" value="earliest">
+                                            <label class="form-check-label" for="start-earliest">Earliest</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="startFrom" id="start-offset" value="offset">
+                                            <label class="form-check-label" for="start-offset">Offset</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 mb-3">
+                                <button class="btn btn-success" id="start-consumer-btn">
+                                    <i class="bi bi-play-fill"></i> Start Consuming
+                                </button>
+                                <button class="btn btn-danger d-none" id="stop-consumer-btn">
+                                    <i class="bi bi-stop-fill"></i> Stop
+                                </button>
+                            </div>
+
+                            <!-- Live Stream Panel -->
+                            <div class="card bg-dark text-light">
+                                <div class="card-header d-flex justify-content-between">
+                                    <span><i class="bi bi-terminal"></i> Live Stream</span>
+                                    <span class="badge bg-success d-none" id="consumer-active-badge">ACTIVE</span>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div id="consumer-stream" class="consumer-stream font-monospace"></div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div>
+                                    <span class="me-3">Received: <strong id="consumer-received">0</strong></span>
+                                    <span class="me-3">Lag: <strong id="consumer-lag">0</strong></span>
+                                    <span>Rate: <strong id="consumer-rate">0 msg/s</strong></span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" id="export-consumer-btn">
+                                        <i class="bi bi-download"></i> Export CSV/JSON
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" id="clear-consumer-btn">
+                                        <i class="bi bi-trash"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics Tab -->
+                <div class="tab-pane fade" id="metrics-panel" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">CloudWatch Metrics</h5>
+                            <button class="btn btn-sm btn-outline-primary" id="refresh-metrics-btn">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card bg-dark text-light">
+                                        <div class="card-header">BytesInPerSec</div>
+                                        <div class="card-body">
+                                            <canvas id="chart-bytes-in"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card bg-dark text-light">
+                                        <div class="card-header">BytesOutPerSec</div>
+                                        <div class="card-body">
+                                            <canvas id="chart-bytes-out"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card bg-dark text-light">
+                                        <div class="card-header">MessagesInPerSec</div>
+                                        <div class="card-body">
+                                            <canvas id="chart-messages-in"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card bg-dark text-light">
+                                        <div class="card-header">Producer Latency (ms)</div>
+                                        <div class="card-body">
+                                            <canvas id="chart-latency"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <a href="#" id="cloudwatch-link" class="btn btn-outline-info btn-sm" target="_blank">
+                                    <i class="bi bi-box-arrow-up-right"></i> Open CloudWatch Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Topic Modal -->
+    <div class="modal fade" id="createTopicModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Topic</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Topic Name</label>
+                        <input type="text" class="form-control" id="new-topic-name" placeholder="my-new-topic">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Partitions</label>
+                            <input type="number" class="form-control" id="new-topic-partitions" value="3" min="1" max="100">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Replication Factor</label>
+                            <input type="number" class="form-control" id="new-topic-replication" value="3" min="1" max="5">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-create-topic">Create Topic</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@faker-js/faker@8.3.1/dist/faker.min.js"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cluster.js"></script>
+    <script src="js/producer.js"></script>
+    <script src="js/consumer.js"></script>
+    <script src="js/metrics.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
