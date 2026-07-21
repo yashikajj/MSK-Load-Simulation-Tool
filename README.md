@@ -1,6 +1,6 @@
 # Amazon MSK Load Simulation Tool
 
-A browser-based load testing tool for Amazon Managed Streaming for Apache Kafka (MSK) clusters, inspired by the [Amazon Kinesis Data Generator](https://github.com/awslabs/amazon-kinesis-data-generator).
+A browser-based load testing tool for Amazon Managed Streaming for Apache Kafka (MSK) clusters.
 
 Generate realistic test data, produce messages at configurable rates, consume and inspect messages in real-time — all from a simple web UI with zero EC2 instances required.
 
